@@ -12,6 +12,7 @@
       <enum name="slideRight" value="1" />
       <enum name="slideLeft" value="2" />
     </attr>
+    <attr name="drag_longclick_start" format="boolean"/>
     <attr name="track_drag_sort" format="boolean"/>
     <attr name="float_alpha" format="float"/>
     <attr name="slide_shuffle_speed" format="float"/>

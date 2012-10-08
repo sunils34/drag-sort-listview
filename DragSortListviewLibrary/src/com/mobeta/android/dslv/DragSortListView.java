@@ -216,6 +216,8 @@ public class DragSortListView extends ListView {
      * Drag-scroll encapsulator!
      */
     private DragScroller mDragScroller;
+    
+    private DragItemLongClickListener mItemLongClickListener;
 
     /**
      * Determines the start of the upward drag-scroll region
@@ -317,8 +319,7 @@ public class DragSortListView extends ListView {
      * Debugging class.
      */
     private DragSortTracker mDragSortTracker;
-
-
+    
 
     public DragSortListView(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -363,6 +364,12 @@ public class DragSortListView extends ListView {
             mMaxScrollSpeed = a.getFloat(
                     R.styleable.DragSortListView_max_drag_scroll_speed,
                     mMaxScrollSpeed);
+            
+            //Start Reorder on LongClick
+            if(a.getBoolean(R.styleable.DragSortListView_drag_longclick_start, false)) {
+            	mItemLongClickListener = new DragItemLongClickListener(); 
+                setOnItemLongClickListener(mItemLongClickListener);
+            }
 
             a.recycle();
         }
@@ -371,6 +378,7 @@ public class DragSortListView extends ListView {
 
         mDragScroller = new DragScroller();
         setOnScrollListener(mDragScroller);
+        
     }
     
     /**
@@ -878,7 +886,7 @@ public class DragSortListView extends ListView {
             mDragSortTracker.appendState();
         }
     }
-
+    
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         if (mRemoveListener != null && mGestureDetector == null) {
@@ -907,75 +915,82 @@ public class DragSortListView extends ListView {
             }
         }
         if (mDragListener != null || mDropListener != null) {
-            switch (ev.getAction()) {
-            case MotionEvent.ACTION_DOWN:
-                //Log.d("mobeta", "action down!");
-                int x = (int) ev.getX();
-                int y = (int) ev.getY();
-                mLastX = x;
-                mLastY = y;
-                mDownY = y;
-                int itemnum = pointToPosition(x, y); //includes headers/footers
-                
-                final int numHeaders = getHeaderViewsCount();
-                final int numFooters = getFooterViewsCount();
-                
-                //Log.d("mobeta", "touch down on position " + itemnum);
-                if (itemnum == AdapterView.INVALID_POSITION || itemnum < numHeaders || itemnum >= getCount() - numFooters) {
-                    break;
-                }
-                ViewGroup item = (ViewGroup) getChildAt(itemnum - getFirstVisiblePosition());
-                
-                mDragPointX = x - item.getLeft();
-                mDragPointY = y - item.getTop();
-                final int rawX = (int) ev.getRawX();
-                final int rawY = (int) ev.getRawY();
-                mXOffset = rawX - x;
-                mYOffset = rawY - y;
+        	switch (ev.getAction()) {
+        	case MotionEvent.ACTION_DOWN:
+        		Log.d("Mobeta", "EV Down");
+ 
+        		Log.d("mobeta", "action down!");
+        		int x = (int) ev.getX();
+        		int y = (int) ev.getY();
+        		mLastX = x;
+        		mLastY = y;
+        		mDownY = y;
+        		int itemnum = pointToPosition(x, y); //includes headers/footers
+
+        		final int numHeaders = getHeaderViewsCount();
+        		final int numFooters = getFooterViewsCount();
+
+        		//Log.d("mobeta", "touch down on position " + itemnum);
+        		if (itemnum == AdapterView.INVALID_POSITION || itemnum < numHeaders || itemnum >= getCount() - numFooters) {
+        			break;
+        		}
 
 
-                View dragBox = (View) item.getTag();
-                boolean dragHit = false;
-                if (dragBox != null) {
-                    dragBox.getLocationOnScreen(mTempLoc);
-                    
-                    dragHit = rawX > mTempLoc[0] && rawY > mTempLoc[1] &&
-                                        rawX < mTempLoc[0] + dragBox.getWidth() &&
-                                        rawY < mTempLoc[1] + dragBox.getHeight();
-                }
+        		ViewGroup item = (ViewGroup) getChildAt(itemnum - getFirstVisiblePosition());
 
-                if (dragHit) {
-                    //item.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
-                    item.setDrawingCacheEnabled(true);
-                    // Create a copy of the drawing cache so that it does not get recycled
-                    // by the framework when the list tries to clean up memory
-                    Bitmap bitmap = Bitmap.createBitmap(item.getDrawingCache());
-                    item.setDrawingCacheEnabled(false);
+        		mDragPointX = x - item.getLeft();
+        		mDragPointY = y - item.getTop();
+        		final int rawX = (int) ev.getRawX();
+        		final int rawY = (int) ev.getRawY();
+        		mXOffset = rawX - x;
+        		mYOffset = rawY - y;
+        		
+        		if(mItemLongClickListener == null) {
 
-                    mFloatViewHeight = item.getHeight();
-                    mFloatViewHeightHalf = mFloatViewHeight / 2;
-                    
-                    mFirstExpPos = itemnum;
-                    mSecondExpPos = itemnum;
-                    mSrcPos = itemnum;
-                    mFloatPos = itemnum;
-                    
-                    //Log.d("mobeta", "getCount() = " + getCount());
-                    //Log.d("mobeta", "headers = " + getHeaderViewsCount());
-                    
-                    startDragging(bitmap, x, y);
 
-                    // cancel ListView fling
-                    MotionEvent ev2 = MotionEvent.obtain(ev);
-                    ev2.setAction(MotionEvent.ACTION_CANCEL);
-                    super.onInterceptTouchEvent(ev2);
+        			View dragBox = (View) item.getTag();
+        			boolean dragHit = false;
+        			if (dragBox != null) {
+        				dragBox.getLocationOnScreen(mTempLoc);
 
-                    //return false;
-                    return true;
-                }
-                removeFloatView();
-                break;
-            }
+        				dragHit = rawX > mTempLoc[0] && rawY > mTempLoc[1] &&
+        						rawX < mTempLoc[0] + dragBox.getWidth() &&
+        						rawY < mTempLoc[1] + dragBox.getHeight();
+        			}
+
+        			if (dragHit) {
+        				//item.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
+        				item.setDrawingCacheEnabled(true);
+        				// Create a copy of the drawing cache so that it does not get recycled
+        				// by the framework when the list tries to clean up memory
+        				Bitmap bitmap = Bitmap.createBitmap(item.getDrawingCache());
+        				item.setDrawingCacheEnabled(false);
+
+        				mFloatViewHeight = item.getHeight();
+        				mFloatViewHeightHalf = mFloatViewHeight / 2;
+
+        				mFirstExpPos = itemnum;
+        				mSecondExpPos = itemnum;
+        				mSrcPos = itemnum;
+        				mFloatPos = itemnum;
+
+        				//Log.d("mobeta", "getCount() = " + getCount());
+        				//Log.d("mobeta", "headers = " + getHeaderViewsCount());
+
+        				startDragging(bitmap, x, y);
+
+        				// cancel ListView fling
+        				MotionEvent ev2 = MotionEvent.obtain(ev);
+        				ev2.setAction(MotionEvent.ACTION_CANCEL);
+        				super.onInterceptTouchEvent(ev2);
+
+        				//return false;
+        				return true;
+        			}
+        			removeFloatView();
+        			break;
+        		}
+        	}
         }
         return super.onInterceptTouchEvent(ev);
     }
@@ -1911,7 +1926,50 @@ public class DragSortListView extends ListView {
         
 
     }
+    
+    /**
+     * LongClick Listener.  When this occurs, start the Drag/Sort
+     * @author Sunil Sadasivan <sunil@bufferapp.com>
+     *
+     */
+    private class DragItemLongClickListener implements OnItemLongClickListener {
 
+		@Override
+		public boolean onItemLongClick(AdapterView<?> adapter, View item,
+				int itemnum, long arg3) {
+			 Log.d("mobeta", "action click!");
+			 int x = mLastX;
+			 int y = mLastY;
 
+			 //item.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
+			 item.setDrawingCacheEnabled(true);
+			 // Create a copy of the drawing cache so that it does not get recycled
+			 // by the framework when the list tries to clean up memory
+			 Bitmap bitmap = Bitmap.createBitmap(item.getDrawingCache());
+			 item.setDrawingCacheEnabled(false);
 
+			 mFloatViewHeight = item.getHeight();
+			 mFloatViewHeightHalf = mFloatViewHeight / 2;
+
+			 mFirstExpPos = itemnum;
+			 mSecondExpPos = itemnum;
+			 mSrcPos = itemnum;
+			 mFloatPos = itemnum;
+
+			 //Log.d("mobeta", "getCount() = " + getCount());
+			 //Log.d("mobeta", "headers = " + getHeaderViewsCount());
+			 Log.d("mobeta", "Coords: " + x + " " + y);
+			 startDragging(bitmap, x, y);
+
+			 /*cancel ListView fling
+                 MotionEvent ev2 = MotionEvent.obtain(ev);
+                 ev2.setAction(MotionEvent.ACTION_CANCEL);
+                 //super.onInterceptTouchEvent(ev2);
+
+                 //return false;
+			  */
+			 return true;
+
+		}
+    }
 }
