@@ -437,7 +437,7 @@ public class DragSortListView extends ListView {
             View child;
 
             //Log.d("mobeta", "getView: position="+position+" convertView="+convertView);
-            Log.d("mobeta", "getView: position="+position+" convertView="+convertView);
+            //Log.d("mobeta", "getView: position="+position+" convertView="+convertView);
             if (convertView != null) {
 
                 v = (RelativeLayout) convertView;
@@ -1937,39 +1937,43 @@ public class DragSortListView extends ListView {
 		@Override
 		public boolean onItemLongClick(AdapterView<?> adapter, View item,
 				int itemnum, long arg3) {
-			 Log.d("mobeta", "action click!");
 			 int x = mLastX;
 			 int y = mLastY;
 
-			 //item.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
-			 item.setDrawingCacheEnabled(true);
-			 // Create a copy of the drawing cache so that it does not get recycled
-			 // by the framework when the list tries to clean up memory
-			 Bitmap bitmap = Bitmap.createBitmap(item.getDrawingCache());
-			 item.setDrawingCacheEnabled(false);
+			 
+			 View dragBox = (View) item.getTag();
+			 if(dragBox != null) {
+				 //item.setDrawingCacheQuality(View.DRAWING_CACHE_QUALITY_HIGH);
+				 item.setDrawingCacheEnabled(true);
+				 // Create a copy of the drawing cache so that it does not get recycled
+				 // by the framework when the list tries to clean up memory
+				 Bitmap bitmap = Bitmap.createBitmap(item.getDrawingCache());
+				 item.setDrawingCacheEnabled(false);
 
-			 mFloatViewHeight = item.getHeight();
-			 mFloatViewHeightHalf = mFloatViewHeight / 2;
+				 mFloatViewHeight = item.getHeight();
+				 mFloatViewHeightHalf = mFloatViewHeight / 2;
 
-			 mFirstExpPos = itemnum;
-			 mSecondExpPos = itemnum;
-			 mSrcPos = itemnum;
-			 mFloatPos = itemnum;
+				 mFirstExpPos = itemnum;
+				 mSecondExpPos = itemnum;
+				 mSrcPos = itemnum;
+				 mFloatPos = itemnum;
 
-			 //Log.d("mobeta", "getCount() = " + getCount());
-			 //Log.d("mobeta", "headers = " + getHeaderViewsCount());
-			 Log.d("mobeta", "Coords: " + x + " " + y);
-			 startDragging(bitmap, x, y);
+				 //Log.d("mobeta", "getCount() = " + getCount());
+				 //Log.d("mobeta", "headers = " + getHeaderViewsCount());
+				 startDragging(bitmap, x, y);
 
-			 /*cancel ListView fling
+				 /*cancel ListView fling
                  MotionEvent ev2 = MotionEvent.obtain(ev);
                  ev2.setAction(MotionEvent.ACTION_CANCEL);
                  //super.onInterceptTouchEvent(ev2);
 
                  //return false;
-			  */
-			 return true;
-
+				  */
+				 return true;
+			 }
+			 else {
+				 return false;
+			 }
 		}
     }
 }
