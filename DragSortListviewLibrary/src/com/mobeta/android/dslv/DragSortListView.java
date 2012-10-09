@@ -21,26 +21,38 @@
 
 package com.mobeta.android.dslv;
 
-import android.content.Context;
-import android.content.res.TypedArray;
-import android.graphics.Bitmap;
-import android.graphics.PixelFormat;
-import android.graphics.Rect;
-import android.graphics.drawable.Drawable;
-import android.graphics.Canvas;
-import android.os.Environment;
-import android.os.SystemClock;
-import android.util.AttributeSet;
-import android.util.Log;
-import android.view.*;
-import android.view.GestureDetector.SimpleOnGestureListener;
-import android.widget.*;
-
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
+
+import android.content.Context;
+import android.content.res.TypedArray;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.PixelFormat;
+import android.graphics.Rect;
+import android.graphics.drawable.Drawable;
+import android.os.Environment;
+import android.os.SystemClock;
+import android.util.AttributeSet;
+import android.util.Log;
+import android.view.GestureDetector;
+import android.view.GestureDetector.SimpleOnGestureListener;
+import android.view.Gravity;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.ViewConfiguration;
+import android.view.ViewGroup;
+import android.view.WindowManager;
+import android.widget.AbsListView;
+import android.widget.AdapterView;
+import android.widget.BaseAdapter;
+import android.widget.HeaderViewListAdapter;
+import android.widget.ImageView;
+import android.widget.ListAdapter;
+import android.widget.ListView;
+import android.widget.RelativeLayout;
 
 
 /**
@@ -148,6 +160,12 @@ public class DragSortListView extends ListView {
      * hovers over a new position.
      */
     private DragListener mDragListener;
+    
+    /**
+     * A listener that receives callbacks whenever the floating View
+     * hovers.
+     */
+    private DragHoverListener mDragHoverListener;
 
     /**
      * A listener that receives a callback when the floating View
@@ -861,16 +879,26 @@ public class DragSortListView extends ListView {
             mFirstExpPos = itemPos;
             mSecondExpPos = itemPos;
         }
-
+        
         if (mFirstExpPos != oldFirstExpPos || mSecondExpPos != oldSecondExpPos || mSlideFrac != oldSlideFrac) {
             updated = true;
+        }
+        
+        if(mDragHoverListener != null) {
+        	updated = mDragHoverListener.dragHover(mFirstExpPos, mSecondExpPos);
+        	//if we have not received an update, revert the positions back
+        	if(updated == false) {
+        		mFirstExpPos = oldFirstExpPos;
+        		mSecondExpPos = oldSecondExpPos;
+        		mFloatPos = itemPos; 
+        	}
         }
 
         if (itemPos != mFloatPos) {
             if (mDragListener != null) {
-                mDragListener.drag(mFloatPos - numHeaders, itemPos - numHeaders);
+            	mDragListener.drag(mFloatPos - numHeaders, itemPos - numHeaders);
             }
-
+            
             mFloatPos = itemPos;
             updated = true;
         }
@@ -1557,6 +1585,10 @@ public class DragSortListView extends ListView {
     public void setDragListener(DragListener l) {
         mDragListener = l;
     }
+    
+    public void setDragHoverListener(DragHoverListener l) {
+        mDragHoverListener = l;
+    }
 
     /**
      * This better reorder your ListAdapter! DragSortListView does not do this
@@ -1587,6 +1619,11 @@ public class DragSortListView extends ListView {
     public interface DragListener {
         public void drag(int from, int to);
     }
+    
+    public interface DragHoverListener {
+        public boolean dragHover(int firstExpPos, int secondExpPos);
+    }
+    
     
     /**
      * Your implementation of this has to reorder your ListAdapter! 
