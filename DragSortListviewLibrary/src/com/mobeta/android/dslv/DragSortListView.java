@@ -467,8 +467,8 @@ public class DragSortListView extends ListView {
                     v.removeViewAt(0);
                     v.addView(child);
                     // check that tags are equal too?
-                    v.setTag(child.findViewById(R.id.drag));
                 }
+                v.setTag(child.findViewById(R.id.drag));
             } else {
                 AbsListView.LayoutParams params =
                     new AbsListView.LayoutParams(
