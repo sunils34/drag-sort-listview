@@ -945,7 +945,6 @@ public class DragSortListView extends ListView {
         if (mDragListener != null || mDropListener != null) {
         	switch (ev.getAction()) {
         	case MotionEvent.ACTION_DOWN:
-        		Log.d("Mobeta", "EV Down");
  
         		Log.d("mobeta", "action down!");
         		int x = (int) ev.getX();
@@ -1584,6 +1583,10 @@ public class DragSortListView extends ListView {
 
     public void setDragListener(DragListener l) {
         mDragListener = l;
+    }
+    
+    public void setGestureDetector(GestureDetector detector) {
+    	mGestureDetector = detector; 
     }
     
     public void setDragHoverListener(DragHoverListener l) {
