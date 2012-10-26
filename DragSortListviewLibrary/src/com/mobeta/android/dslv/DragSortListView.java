@@ -757,7 +757,13 @@ public class DragSortListView extends ListView {
         if (startView == null) {
             startPos = first + getChildCount() / 2;
             startView = getChildAt(startPos - first);
+            
         }
+        
+        if(startView == null) {
+        	return false; 
+        }
+        
         int startTop = startView.getTop() + mScrollY;
 
         ItemHeights itemHeights = new ItemHeights();
