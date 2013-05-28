@@ -1351,7 +1351,11 @@ public class DragSortListView extends ListView {
             mBlockLayoutRequests = false;
         }
 
-        super.layoutChildren();
+        try {
+            super.layoutChildren();
+        } catch(IllegalStateException e) {
+            Log.e("Buffer.DragSortListView", e.getMessage());
+        }
     }
 
     @Override
